@@ -17,7 +17,7 @@
 //    Generic     uh_clamp  uh_auto  uh_approx  uh_quality  uh_fragments  uh_poly_r
 //    Overhang    uh_beta  uh_rise  uh_run  uh_teardrop_apex  uh_roof_h
 //                uh_overhang_of_nz  uh_flare_len  uh_chamfer_h  uh_chamfer_depth
-//                uh_countersink_depth
+//                uh_countersink_depth  uh_metric
 //    Hexagon     uh_hex_flank  uh_hex_peak  uh_hex_dims  uh_hex_pitch
 //    Console     uh_warn  uh_info  uh_warn_f  uh_clamp_warn
 //    Transforms  uh_mirror_copy
@@ -98,6 +98,14 @@ function uh_chamfer_h(inset, max_overhang) = inset * max(1, tan(uh_beta(max_over
 // so the chamfer under a horizontal bottom edge also stays within max_overhang.
 function uh_chamfer_depth(inset, max_overhang) = inset / max(1, tan(uh_beta(max_overhang)));
 
+// Metric screws M3 ... M6: [clearance hole (ISO 273 medium), nut across flats, nut height
+// (ISO 4032), countersunk head diameter (ISO 10642), cap head diameter, cap head height (ISO 4762)]
+function uh_metric(size) =
+      size == "M3" ? [3.4,  5.5, 2.4,  6.72,  5.5, 3]
+    : size == "M5" ? [5.5,  8.0, 4.7, 11.20,  8.5, 5]
+    : size == "M6" ? [6.6, 10.0, 5.2, 13.44, 10.0, 6]
+    :                [4.5,  7.0, 3.2,  8.96,  7.0, 4];     // M4
+
 // Depth of a countersink from bore d to head_d with the given included angle
 function uh_countersink_depth(d, head_d, angle = 90) =
     max(0, (head_d - d) / 2) / tan(angle / 2);
@@ -168,5 +176,6 @@ module uh_core_selftest() {
     assert(uh_approx(uh_flare_len(1, 60, "x"), 1, t),            "flare length");
     assert(uh_approx(uh_chamfer_h(1, 60), 1, t),                 "chamfer 45° at 60");
     assert(uh_chamfer_h(1, 40) > 1,                              "chamfer steeper at 40");
+    assert(uh_metric("M6")[1] == 10 && uh_metric("M3")[0] == 3.4, "metric screw table");
     uh_info("uh_core self-test passed");
 }

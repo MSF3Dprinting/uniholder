@@ -1,0 +1,13 @@
+{
+  "din_clip_m3":          {"part": "din_clip", "din_bolt": "M3"},
+  "din_clip_m4":          {"part": "din_clip"},
+  "din_clip_m5":          {"part": "din_clip", "din_bolt": "M5"},
+  "din_clip_m6":          {"part": "din_clip", "din_bolt": "M6"},
+  "din_clip_w50":         {"part": "din_clip", "din_clip_w": 50},
+  "din_holes_m3":         {"din_holes": true, "din_bolt": "M3"},
+  "din_holes_m4":         {"din_holes": true},
+  "din_holes_m6_cb_hex":  {"din_holes": true, "din_bolt": "M6", "back_hole_style": "counterbore", "back_style": "hex"},
+  "din_holes_m5_keyhole": {"din_holes": true, "din_bolt": "M5", "back_hole_style": "keyhole"},
+  "holder_and_clip_m5":   {"part": "holder_and_clip", "din_holes": true, "din_bolt": "M5", "wings": "right"},
+  "vpole_tie_clr":        {"pole_mount": "vertical"}
+}

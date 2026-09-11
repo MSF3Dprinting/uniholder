@@ -1,0 +1,6 @@
+{
+  "ex1_wall_cup":        {},
+  "ex2_iv_pole_bottle":  {"size_x": 75, "size_y": 75, "size_z": 110, "front_lip_h": 30, "pole_mount": "vertical", "pole_d": 25},
+  "ex3_din_parts_bin":   {"size_x": 80, "size_y": 50, "size_z": 70, "front_lip_h": 20, "din_holes": true},
+  "ex3_din_clip":        {"part": "din_clip"}
+}

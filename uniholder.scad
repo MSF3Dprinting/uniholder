@@ -1,18 +1,20 @@
 // =====================================================================
-//  UniHolder — parametric universal holder                        v0.4
+//  UniHolder — parametric universal holder                        v1.0
 //  MSF 3D Printing for All · OpenSCAD 2021.01 or newer · no libraries
 //
 //  Print exactly as generated: standing on its floor, without supports.
 //  No downward-facing surface exceeds max_overhang.
 //
+//  v1.0 (ST-5): DIN rail clip, single-file Customizer version, zip-tie clearance.
 //  v0.4 (ST-4): vertical and horizontal pole mounts with zip-tie tunnels.
 //               Screw heads seat flush: the back wall thickens, nothing enters the item space.
 //  v0.3 (ST-3): back holes; wings with holes and gussets; cleaner F5 preview.
 //  v0.2 (ST-2): body, wall styles, hexagon pattern, front opening.
-//  Next: DIN rail clip and single-file version (ST-5).
 // =====================================================================
 
 /* [Print] */
+// What to generate: holder, DIN rail clip, both on one bed, or din_preview (clip shown mounted, for viewing only)
+part = "holder"; // [holder, din_clip, holder_and_clip, din_preview]
 // Largest overhang in degrees from vertical (60 default, 45 for weak part cooling)
 max_overhang = 60; // [40:5:60]
 // Render quality
@@ -127,26 +129,51 @@ pole_d = 25; // [8:0.5:80]
 pole_v_angle = 90; // [60:5:150]
 // Number of zip ties
 tie_count = 2; // [1:1:6]
-// Zip tie width including clearance
+// Zip tie width (standard ties: 5 mm)
 tie_w = 5; // [2:0.5:14]
-// Zip tie thickness including clearance
+// Zip tie thickness (standard ties: 2 mm)
 tie_t = 2; // [1:0.1:4]
+// Clearance added to the tunnels on width and thickness
+tie_clr = 0.5; // [0:0.1:2]
+
+/* [DIN rail clip] */
+// Bolt holes for the DIN rail clip in the back wall; the clip is a separate part (Print tab: part)
+din_holes = false;
+// Bolts joining holder and clip (hole, head and nut sizes follow)
+din_bolt = "M4"; // [M3, M4, M5, M6]
+// Height of the rail centreline on the holder (0 = automatic)
+din_rail_z = 0; // [0:0.5:400]
+// Clip width along the rail (0 = automatic)
+din_clip_w = 0; // [0:1:100]
 
 /* [Hidden] */
 include <lib/uh_core.scad>
 include <lib/uh_shapes.scad>
 include <lib/uh_body.scad>
+include <lib/uh_din.scad>
 include <lib/uh_mount.scad>
 
 $fa = uh_quality(quality)[0];
 $fs = uh_quality(quality)[1];
 
+// Test hooks (not shown in the Customizer):
+//   cavity_probe      what intrudes into the item space - must be empty
+//   din_fit           holder, clip and a TS35 rail in their mounted positions
+//   din_interference  clip and rail overlap at rest - only the spring preload
+//   din_pullout       overlap with the rail moved 1 mm off the plate - the teeth hold
+debug_view = "none";
+
 uh_body_checks();
 uh_mount_checks();
-// Test hook: "cavity_probe" keeps only what intrudes into the item space (must be empty)
-debug_view = "none";
-if (debug_view == "cavity_probe") intersection() { uh_holder(); uh_item_space(); }
-else uh_holder();
+
+if      (debug_view == "cavity_probe")     intersection() { uh_holder(); uh_item_space(); }
+else if (debug_view == "din_fit")          { color("teal") uh_holder(); color("orange") uh_din_clip_in_use(); color("silver") uh_din_rail(); }
+else if (debug_view == "din_interference") intersection() { uh_din_clip_in_use(); uh_din_rail(); }
+else if (debug_view == "din_pullout")      intersection() { uh_din_clip_in_use(); uh_din_rail(1); }
+else if (part == "din_clip")               uh_din_clip();
+else if (part == "holder_and_clip")        { uh_holder(); uh_din_clip_beside(); }
+else if (part == "din_preview")            { uh_holder(); color("orange") uh_din_clip_in_use(); %uh_din_rail(); }
+else                                       uh_holder();
 
 // Assembly order: shell − cavity, add mount features, then cut
 // perforations, the front opening and the mount holes last.

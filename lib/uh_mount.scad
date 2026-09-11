@@ -1,5 +1,5 @@
 // =====================================================================
-//  UniHolder — lib/uh_mount.scad                             ST-3, ST-4
+//  UniHolder — lib/uh_mount.scad                       ST-3, ST-4, ST-5
 //  Wall mounting: back holes (plain, countersink, counterbore, keyhole) seated
 //  flush in the back wall, wings with holes and gussets (ST-3); vertical and
 //  horizontal pole saddles with zip-tie tunnels (ST-4). Nothing enters the item space.
@@ -25,7 +25,7 @@ function _uh_spread(n, lo, hi, pitch, single) =
 
 // ---- back holes ---------------------------------------------------------
 
-BH_KEY  = back_hole_style == "keyhole";
+BH_KEY  = BH_STYLE == "keyhole";
 BH_SLOT = BH_KEY ? BH_HEAD + 2 : 0;                         // keyhole travel
 BH_R    = BH_HEAD / 2 + RIM;                                // hexagons keep clear around a hole
 BH_TOP  = uh_teardrop_apex(BH_HEAD / 2, MO) + RIM;          // ... and above it
@@ -34,9 +34,14 @@ BH_TOP  = uh_teardrop_apex(BH_HEAD / 2, MO) + RIM;          // ... and above it
 BH_X_LIM = IN_W / 2 - R_IN[2] - BH_HEAD / 2 - 1;
 BH_Z_MIN = floor_t + COVE + BH_HEAD / 2 + 1;
 BH_Z_MAX = BODY_H - max(C_TOP_OUT, C_TOP_IN) - uh_teardrop_apex(BH_HEAD / 2, MO) - BH_SLOT - 2;
+
+// DIN clip bolt pattern (ST-5): two holes along the rail at the rail height
+DIN_ON   = BH_DIN;
+DIN_Z    = uh_clamp(din_rail_z > 0 ? din_rail_z : max(BODY_H / 2, -DIN_V_BOT + 1), BH_Z_MIN, BH_Z_MAX);
+DIN_KEEP = [-DIN_W / 2 - 1, DIN_Z + DIN_V_BOT - 1, DIN_W / 2 + 1, DIN_Z + DIN_V_TOP + 1];
 BH_COLS  = max(1, min(back_hole_cols, floor(2 * BH_X_LIM / (BH_HEAD + 2)) + 1));
 BH_ROWS  = max(1, min(back_hole_rows, floor((BH_Z_MAX - BH_Z_MIN) / (BH_HEAD + 2)) + 1));
-BH_POS   = !BH_ACTIVE ? [] :
+BH_POS   = !BH_ACTIVE ? [] : DIN_ON ? [[-DIN_BOLT_PITCH / 2, DIN_Z], [DIN_BOLT_PITCH / 2, DIN_Z]] :
     [for (x = _uh_spread(BH_COLS, -BH_X_LIM, BH_X_LIM, back_hole_pitch_x, 0))
         for (z = _uh_spread(BH_ROWS, BH_Z_MIN, BH_Z_MAX, back_hole_pitch_z,
                             BH_Z_MIN + (BH_Z_MAX - BH_Z_MIN) * 2 / 3))
@@ -72,20 +77,22 @@ WG_HZ     = _uh_spread(WG_N, WG_HZ_MIN, WG_HZ_MAX, 0, (WG_HZ_MIN + WG_HZ_MAX) / 
 POLE_ON    = pole_mount != "none";
 POLE_VERT  = pole_mount == "vertical";
 TIE_FLARE  = 1.0;                                            // flare at each tunnel exit
+TIE_W      = tie_w + tie_clr;                                // tunnel size = zip tie + clearance
+TIE_T      = tie_t + tie_clr;
 POLE_RIM   = 3.0;                                            // material beside the groove
 POLE_TH    = (POLE_ON && !POLE_VERT)                         // horizontal: upper flank >= beta (P2)
            ? uh_clamp_warn(pole_v_angle, 2 * uh_beta(MO), 150, "pole_v_angle") : pole_v_angle;
 POLE_C     = (pole_d / 2) * pow(cos(POLE_TH / 2), 2) / sin(POLE_TH / 2);   // contact depth below apex
 POLE_G     = POLE_C + 2;                                     // groove depth
-POLE_YA    = tie_t + 2 * TIE_FLARE + 2 * MIN_SKIN;           // apex distance from the back face
+POLE_YA    = TIE_T + 2 * TIE_FLARE + 2 * MIN_SKIN;           // apex distance from the back face
 POLE_DEPTH = POLE_YA + POLE_G;                               // block depth behind the back face
 POLE_SIZE  = 2 * POLE_G * tan(POLE_TH / 2) + 2 * POLE_RIM;   // block width (vertical) or height (horizontal)
 POLE_YT    = POLE_YA / 2;                                    // tunnel centre
 POLE_FIX   = BACK_T / 2;                                     // block reaches into the back wall
-TIE_PITCH  = tie_w + 2 * TIE_FLARE + 4;                      // minimum tunnel spacing
+TIE_PITCH  = TIE_W + 2 * TIE_FLARE + 4;                      // minimum tunnel spacing
 
 // vertical pole: full-height block, horizontal tunnels spread over the height
-PV_Z_LO = tie_w / 2 + TIE_FLARE + uh_roof_h(tie_t + 2 * TIE_FLARE, MO) + 4;
+PV_Z_LO = TIE_W / 2 + TIE_FLARE + uh_roof_h(TIE_T + 2 * TIE_FLARE, MO) + 4;
 PV_Z_HI = BODY_H - C_TOP_OUT - PV_Z_LO;
 PV_N    = max(1, min(tie_count, floor((PV_Z_HI - PV_Z_LO) / TIE_PITCH) + 1));
 PV_ZS   = _uh_spread(PV_N, PV_Z_LO, PV_Z_HI, 0, BODY_H / 2);
@@ -94,7 +101,7 @@ PV_ZS   = _uh_spread(PV_N, PV_Z_LO, PV_Z_HI, 0, BODY_H / 2);
 PH_L    = BODY_W - 2 * max(R_OUT[2], 1);
 PH_ZB   = BODY_H - POLE_SIZE;                                // underside at the rear face
 PH_ZC   = BODY_H - POLE_SIZE / 2;                            // cradle axis height
-PH_X_LO = -PH_L / 2 + tie_w / 2 + TIE_FLARE + 3;
+PH_X_LO = -PH_L / 2 + TIE_W / 2 + TIE_FLARE + 3;
 PH_N    = max(1, min(tie_count, floor((-2 * PH_X_LO) / TIE_PITCH) + 1));
 PH_XS   = _uh_spread(PH_N, PH_X_LO, -PH_X_LO, 0, 0);
 function _uh_ph_slope_z(y) = PH_ZB - uh_rise(POLE_DEPTH - y, MO);
@@ -109,13 +116,13 @@ module uh_mount_checks() {
     if (BH_ACTIVE) {
         assert(BH_X_LIM >= 0 && BH_Z_MAX >= BH_Z_MIN,
             "UniHolder: the back wall is too small for these back holes - reduce back_hole_d or the head size");
-        uh_warn(BH_COLS == back_hole_cols && BH_ROWS == back_hole_rows,
+        if (!DIN_ON) uh_warn(BH_COLS == back_hole_cols && BH_ROWS == back_hole_rows,
             str("back holes reduced to ", BH_COLS, " x ", BH_ROWS, " so the heads do not overlap"));
-        uh_warn(back_hole_pitch_x == 0 || BH_COLS < 2 || back_hole_pitch_x <= 2 * BH_X_LIM / (BH_COLS - 1),
+        if (!DIN_ON) uh_warn(back_hole_pitch_x == 0 || BH_COLS < 2 || back_hole_pitch_x <= 2 * BH_X_LIM / (BH_COLS - 1),
             "back_hole_pitch_x reduced to fit the back wall");
-        uh_warn(back_hole_pitch_z == 0 || BH_ROWS < 2 || back_hole_pitch_z <= (BH_Z_MAX - BH_Z_MIN) / (BH_ROWS - 1),
+        if (!DIN_ON) uh_warn(back_hole_pitch_z == 0 || BH_ROWS < 2 || back_hole_pitch_z <= (BH_Z_MAX - BH_Z_MIN) / (BH_ROWS - 1),
             "back_hole_pitch_z reduced to fit the back wall");
-        uh_info(str("back holes: ", len(BH_POS), " x ", back_hole_style, " d ", back_hole_d,
+        uh_info(str("back holes: ", len(BH_POS), " x ", BH_STYLE, " d ", BH_DIA,
                     BACK_T > back_t ? str(", back wall thickened to ", BACK_T, " mm") : ""));
         uh_warn(size_mode == "inner" || BACK_T <= back_t,
             str("back wall thickened to ", BACK_T, " mm to seat the screw heads - inner depth is reduced"));
@@ -134,7 +141,27 @@ module uh_mount_checks() {
         uh_warn(POLE_N == tie_count, str("tie_count reduced to ", POLE_N, " to fit the pole block"));
         if (back_holes) uh_info("back holes are not used with a pole mount");
         uh_info(str("pole mount: ", pole_mount, ", pole d ", pole_d, " mm, V ", POLE_TH, " deg, block ",
-                    POLE_SIZE, " x ", POLE_DEPTH, " mm, ", POLE_N, " zip-tie tunnels ", tie_w, " x ", tie_t, " mm"));
+                    POLE_SIZE, " x ", POLE_DEPTH, " mm, ", POLE_N, " zip-tie tunnels ", TIE_W, " x ", TIE_T, " mm"));
+    }
+    if (din_holes) {
+        uh_warn(pole_mount == "none", "din_holes are ignored with a pole mount");
+        if (DIN_ON) {
+            assert(BH_X_LIM >= DIN_BOLT_PITCH / 2,
+                "UniHolder: the holder is too narrow for the DIN clip bolts - increase size_x");
+            uh_warn(back_hole_style != "keyhole", "keyholes cannot hold the DIN clip - countersunk holes are used");
+            uh_warn(DIN_W / 2 <= BODY_W / 2 - R_OUT[2], "the DIN clip is wider than the flat back face");
+            uh_warn(DIN_Z + DIN_V_BOT >= 0 && DIN_Z + DIN_V_TOP <= BODY_H, "the DIN clip reaches beyond the holder height");
+            uh_info(str("DIN clip: rail centre at z = ", DIN_Z, " mm; clip width ", DIN_W, " mm; fix with 2 x ",
+                        din_bolt, " x ", DIN_SCREW_L,
+                        BH_STYLE == "counterbore" ? " socket head cap screws" : BH_STYLE == "plain" ? " screws" : " countersunk screws",
+                        " and 2 x ", din_bolt, " nuts"));
+            if (part == "holder")
+                uh_info("the DIN clip is a separate part - set part = din_clip, holder_and_clip or din_preview to see it");
+        }
+    }
+    if (part == "din_preview") {
+        uh_warn(false, "part = din_preview shows the clip mounted on its rail for viewing - do not print this export");
+        uh_warn(DIN_ON, "din_preview: set din_holes = true so the holder gets the clip bolt holes");
     }
 }
 
@@ -142,7 +169,7 @@ module uh_mount_checks() {
 
 function uh_mount_keepouts(wall) =
       wall == "back" ? concat([for (p = BH_POS) [p[0] - BH_R, p[1] - BH_R, p[0] + BH_R, p[1] + BH_TOP + BH_SLOT]],
-                              POLE_ON ? [POLE_KEEP] : [])
+                              POLE_ON ? [POLE_KEEP] : [], DIN_ON ? [DIN_KEEP] : [])
     : ((wall == "left"  && len([for (s = WG_SIDES) if (s < 0) s]) > 0) ||
        (wall == "right" && len([for (s = WG_SIDES) if (s > 0) s]) > 0))
           ? [[-wing_t - WG_G - wall_t - 1, max(0, WG_Z_ROOT) - 1, 1, WG_Z_TOP + 1]]
@@ -160,8 +187,8 @@ module uh_mount_external() {
 module uh_mount_cutters() {
     for (p = BH_POS)
         translate([p[0], 0, p[1]])
-            if (BH_KEY) uh_keyhole(back_hole_d, BH_HEAD, BH_SLOT, KEY_SKIN, KEY_HEAD, 0, MO);
-            else        uh_screw_hole(back_hole_d, BACK_T, back_hole_style, BH_HEAD, CB_DEPTH, 90, 2, 0, MO);
+            if (BH_KEY) uh_keyhole(BH_DIA, BH_HEAD, BH_SLOT, KEY_SKIN, KEY_HEAD, 0, MO);
+            else        uh_screw_hole(BH_DIA, BACK_T, BH_STYLE, BH_HEAD, CB_DEPTH, 90, 2, 0, MO);
     for (s = WG_SIDES, z = WG_HZ)
         translate([s * WG_HOLE_X, 0, z])
             uh_screw_hole(wing_hole_d, wing_t, wing_hole_style == "countersink" ? "countersink" : "plain",
@@ -242,11 +269,11 @@ module _uh_pole_groove() {
 module _uh_pole_tunnels() {
     if (POLE_VERT)
         for (z = PV_ZS)
-            translate([0, POLE_YT, z]) uh_tunnel(tie_w, tie_t, POLE_SIZE, TIE_FLARE, "x", MO);
+            translate([0, POLE_YT, z]) uh_tunnel(TIE_W, TIE_T, POLE_SIZE, TIE_FLARE, "x", MO);
     else
         for (x = PH_XS) {
-            z0 = max(0, _uh_ph_slope_z(POLE_YT - tie_t / 2 - TIE_FLARE)) - 0.5;
+            z0 = max(0, _uh_ph_slope_z(POLE_YT - TIE_T / 2 - TIE_FLARE)) - 0.5;
             z1 = BODY_H + 0.5;
-            translate([x, POLE_YT, (z0 + z1) / 2]) uh_tunnel(tie_w, tie_t, z1 - z0, TIE_FLARE, "z", MO);
+            translate([x, POLE_YT, (z0 + z1) / 2]) uh_tunnel(TIE_W, TIE_T, z1 - z0, TIE_FLARE, "z", MO);
         }
 }

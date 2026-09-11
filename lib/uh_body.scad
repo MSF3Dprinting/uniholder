@@ -25,15 +25,20 @@ MO = uh_clamp_warn(max_overhang, UH_OVERHANG_MIN, UH_OVERHANG_MAX, "max_overhang
 // In inner mode the body grows backwards and the item space keeps its size.
 KEY_SKIN  = 2.0;   // keyhole: wall-side skin that carries the screw head
 KEY_HEAD  = 3.5;   // keyhole: head channel depth behind the skin
-CB_DEPTH  = 3.0;   // counterbore depth
 MIN_SKIN  = 1.2;   // material left behind a seated head
-BH_ACTIVE = back_holes && pole_mount == "none";   // a pole mount replaces the back holes
-BH_HEAD   = uh_auto(back_hole_head_d, 2 * back_hole_d);    // screw head incl. clearance
+BH_ACTIVE = (back_holes || din_holes) && pole_mount == "none";   // a pole mount replaces the back holes
+BH_DIN    = din_holes && BH_ACTIVE;                               // holes follow the DIN clip bolts
+BH_BOLT   = uh_metric(din_bolt);
+BH_STYLE  = (BH_DIN && back_hole_style == "keyhole") ? "countersink" : back_hole_style;
+BH_DIA    = BH_DIN ? BH_BOLT[0] : back_hole_d;                    // hole diameter
+BH_HEAD   = !BH_DIN ? uh_auto(back_hole_head_d, 2 * back_hole_d)  // screw head incl. clearance
+          : BH_STYLE == "counterbore" ? BH_BOLT[4] + 0.6 : BH_BOLT[3] + 0.5;
+CB_DEPTH  = BH_DIN ? BH_BOLT[5] + 0.4 : 3.0;                      // counterbore depth
 BH_NEED   = !BH_ACTIVE ? 0
-          : back_hole_style == "countersink" ? uh_countersink_depth(back_hole_d, BH_HEAD) + MIN_SKIN
-          : back_hole_style == "counterbore" ? CB_DEPTH + MIN_SKIN
-          : back_hole_style == "keyhole"     ? KEY_SKIN + KEY_HEAD + MIN_SKIN
-          :                                    MIN_SKIN;
+          : BH_STYLE == "countersink" ? uh_countersink_depth(BH_DIA, BH_HEAD) + MIN_SKIN
+          : BH_STYLE == "counterbore" ? CB_DEPTH + MIN_SKIN
+          : BH_STYLE == "keyhole"     ? KEY_SKIN + KEY_HEAD + MIN_SKIN
+          :                             MIN_SKIN;
 BACK_T    = max(back_t, BH_NEED);
 
 BODY_W = size_mode == "inner" ? size_x + 2 * item_clr + 2 * wall_t : size_x;
