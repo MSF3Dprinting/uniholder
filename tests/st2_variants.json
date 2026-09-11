@@ -1,0 +1,12 @@
+{
+  "default":     {},
+  "allhex":      {"back_style": "hex", "front_style": "hex", "floor_style": "hex"},
+  "slot":        {"front_style": "slot", "left_style": "solid", "right_style": "solid"},
+  "outer_sharp": {"size_mode": "outer", "size_x": 50, "size_y": 30, "size_z": 40, "corner_r": 0,
+                  "back_corner_r": 0, "front_style": "solid", "left_style": "solid", "right_style": "hex"},
+  "bigr_lip0":   {"corner_r": 20, "back_corner_r": 10, "wall_t": 1.6, "chamfer_top": 2,
+                  "front_lip_h": 0, "front_side_lip_w": 25},
+  "tiny":        {"size_x": 20, "size_y": 15, "size_z": 25},
+  "wide_low":    {"size_x": 180, "size_y": 60, "size_z": 35, "hex_size": 5, "hex_strut": 1.6,
+                  "front_lip_h": 10, "floor_style": "hex"}
+}

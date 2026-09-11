@@ -1,0 +1,8 @@
+{
+  "vpole_default":   {"pole_mount": "vertical"},
+  "vpole_d60_v120":  {"pole_mount": "vertical", "pole_d": 60, "pole_v_angle": 120, "tie_count": 3, "tie_w": 9, "tie_t": 2.5},
+  "vpole_d12_wings": {"pole_mount": "vertical", "pole_d": 12, "wings": "both", "tie_w": 2.5, "tie_t": 1.2, "back_style": "hex"},
+  "hpole_d32":       {"pole_mount": "horizontal", "pole_d": 32},
+  "hpole_v60_hex":   {"pole_mount": "horizontal", "pole_v_angle": 60, "tie_count": 3, "back_style": "hex"},
+  "hpole_d60_low":   {"pole_mount": "horizontal", "pole_d": 60, "size_z": 60, "tie_w": 9, "tie_t": 2.5}
+}

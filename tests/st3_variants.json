@@ -1,0 +1,14 @@
+{
+  "holes_default":    {},
+  "holes_plain_hex":  {"back_hole_style": "plain", "back_hole_cols": 2, "back_hole_rows": 3, "back_style": "hex"},
+  "holes_cb_pitch":   {"back_hole_style": "counterbore", "back_hole_d": 5, "back_hole_cols": 2, "back_hole_rows": 1,
+                       "back_hole_pitch_x": 30},
+  "keyhole_hex":      {"back_hole_style": "keyhole", "back_hole_cols": 2, "back_hole_rows": 1, "back_style": "hex"},
+  "wings_both":       {"wings": "both", "back_holes": false},
+  "wing_raised_slot": {"wings": "right", "wing_align": "top", "wing_h": 30, "wing_len": 30,
+                       "wing_hole_style": "slot", "wing_hole_count": 1},
+  "wing_d10_thick":   {"wings": "left", "wing_len": 40, "wing_hole_d": 10, "wing_t": 6, "wing_hole_count": 3,
+                       "back_corner_r": 8},
+  "wing_short_many":  {"wings": "both", "wing_len": 12, "wing_hole_d": 3, "wing_gusset": false,
+                       "wing_hole_count": 4, "wing_align": "top", "wing_h": 25}
+}
